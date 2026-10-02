@@ -105,7 +105,7 @@
     padding: 0.7rem 1rem; outline-offset: 3px;
   }
   input:focus-visible { outline: 3px solid var(--pup-dark); }
-  .hint { color: var(--muted); font-size: 0.95rem; margin: 0.75rem 0 0; min-height: 1.2em; }
+  .hint { color: var(--muted); font-size: 1.45rem; margin: 0.75rem 0 0; min-height: 1.2em; }
 
   .stats { display: flex; justify-content: center; gap: 2.25rem; margin-top: 1.6rem; padding-top: 1.15rem; border-top: 2px dashed var(--line); }
   .stats div { display: flex; flex-direction: column; gap: 0.2rem; }
@@ -118,6 +118,9 @@
 <div class="scene" aria-hidden="true" id="scene"></div>
 
 <main>
+  <p class="hint">
+    LOOK AT THE PICTURE AND PRESS THE MISSING SOUND
+  </p>
   <svg class="pup" id="pup" viewBox="0 0 180 150" role="img" aria-hidden="true">
     <g class="spark" fill="none" stroke="var(--pup-dark)" stroke-width="4" stroke-linecap="round">
       <path d="M20 50 L8 42"/><path d="M26 30 L18 18"/><path d="M48 18 L46 6"/>
@@ -145,7 +148,7 @@
 
   <input id="entry" type="text" maxlength="1" autocomplete="off" autocorrect="off"
          spellcheck="false" aria-label="Type the missing letter">
-  <p class="hint" id="hint">What letter is missing?</p>
+  <p class="hint" id="hint">What sound is missing?</p>
 
   <div class="stats">
     <div><b id="streak">0</b><span>streak</span></div>
@@ -161,16 +164,16 @@
     ['cat','🐱'], ['dog','🐶'], ['pig','🐷'], ['cow','🐮'], ['hen','🐔'],
     ['bee','🐝'], ['fox','🦊'], ['owl','🦉'], ['ant','🐜'], ['bat','🦇'],
     ['fish','🐟'], ['frog','🐸'], ['bear','🐻'], ['lion','🦁'], ['duck','🦆'],
-    ['bird','🐦'], ['crab','🦀'], ['snail','🐌'], ['snake','🐍'], ['rabbit','🐰'],
+    ['bird','🐦'], /*['crab','🦀']*/, ['snail','🐌'], ['snake','🐍'], ['rabbit','🐰'],
     ['monkey','🐵'], ['turtle','🐢'], ['sheep','🐑'], ['goat','🐐'], ['horse','🐴'],
-    ['zebra','🦓'], ['tiger','🐯'], ['panda','🐼'], ['koala','🐨'], ['camel','🐫'],
-    ['whale','🐋'], ['shark','🦈'], ['mouse','🐭'], ['chick','🐤'],
+    ['zebra','🦓'], ['tiger','🐯'], /*['panda','🐼'], ['koala','🐨']*/, ['camel','🐫'],
+    /*['whale','🐋'], ['shark','🦈']*/, ['mouse','🐭'], ['chick','🐤'],
     // foods
     ['egg','🥚'], ['apple','🍎'], ['lemon','🍋'], ['grape','🍇'], ['cherry','🍒'],
     ['orange','🍊'], ['carrot','🥕'], ['potato','🥔'], ['banana','🍌'], ['cake','🎂'],
     ['pizza','🍕'], ['donut','🍩'], ['candy','🍭'], ['milk','🥛'], ['juice','🧃'],
     ['bread','🍞'], ['cheese','🧀'], ['melon','🍉'], ['mango','🥭'], ['onion','🧅'],
-    ['bacon','🥓'], ['cookie','🍪'], ['waffle','🧇'],
+    /*['bacon','🥓']*/, ['cookie','🍪'], //['waffle','🧇'],
     // transportation (a few simple, common ones)
     ['bus','🚌'], ['car','🚗'], ['train','🚂'], ['plane','✈️'], ['boat','⛵'],
     ['bike','🚲'], ['truck','🚚'], ['ship','🚢'],
