@@ -1,0 +1,319 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Fill the Missing Letter</title>
+<style>
+  :root {
+    --sky-top: #ffd6ec; --sky-bot: #fff1e0;
+    --meadow: #bdeab0; --meadow-dark: #9ddd8d;
+    --bubble: #ffffff;
+    --card: #fffdf8; --ink: #2a2622; --muted: #7d746b; --line: #ecdfcb;
+    --field: #fff; --hit: #1f7a4d; --miss: #c8543f;
+    --pup: #e9c08a; --pup-dark: #c9975c; --pup-light: #fff3e0;
+    --shadow: rgba(66,84,40,.22);
+    --b1:#ffb3c6; --b2:#b3e0ff; --b3:#ffe5a3; --b4:#c9b3ff; --b5:#b3ffd9;
+  }
+  @media (prefers-color-scheme: dark) {
+    :root:not([data-theme="light"]) {
+      --sky-top: #2c1b36; --sky-bot: #382a3f;
+      --meadow: #1d3a2e; --meadow-dark: #163024;
+      --bubble: #4a3f55;
+      --card: #191d28; --ink: #f0ece5; --muted: #97918a; --line: #2e3442;
+      --field: #222736; --hit: #5fd39a; --miss: #e5836f;
+      --pup-dark: #a9793f; --pup-light: #3a3029;
+      --shadow: rgba(0,0,0,.45);
+      --b1:#8a4a63; --b2:#3f6a82; --b3:#8a7640; --b4:#5e4a82; --b5:#3f8266;
+    }
+  }
+  * { box-sizing: border-box; }
+  html, body { height: 100%; }
+  body {
+    margin: 0; color: var(--ink);
+    font-family: ui-rounded, "SF Pro Rounded", "Segoe UI", ui-sans-serif, system-ui, Roboto, Helvetica, Arial, sans-serif;
+    background: linear-gradient(180deg, var(--sky-top) 0%, var(--sky-bot) 62%, var(--sky-bot) 100%);
+    display: flex; align-items: center; justify-content: center;
+    padding: 2rem 1.25rem; overflow-x: hidden;
+  }
+  .scene { position: fixed; inset: 0; z-index: 0; pointer-events: none; overflow: hidden; }
+  .bubble { position: absolute; border-radius: 50%; opacity: .75; animation: rise linear infinite; }
+  @keyframes rise { from { transform: translateY(0); } to { transform: translateY(-120vh); } }
+  @media (prefers-reduced-motion: reduce) { .bubble { animation: none; } }
+  .meadow { position: absolute; left: 0; right: 0; bottom: 0; width: 100%; height: 30vh; }
+
+  main {
+    position: relative; z-index: 1; width: 100%; max-width: 32rem; text-align: center;
+    background: var(--card); border-radius: 28px; padding: 1.6rem 1.5rem 1.5rem;
+    box-shadow: 0 18px 40px var(--shadow);
+  }
+
+  .pup { width: 150px; height: 130px; margin: 0 auto 0.1rem; display: block; overflow: visible; }
+  .pup .head { transform-origin: 90px 120px; }
+  .pup .ear-l { transform-origin: 40px 55px; }
+  .pup .ear-r { transform-origin: 140px 55px; }
+  .pup .eye-happy, .pup .tongue, .pup .spark { opacity: 0; }
+  .pup.cheer .head { animation: hop 620ms cubic-bezier(.3,.9,.4,1); }
+  .pup.cheer .ear-l { animation: flop-l 620ms ease; }
+  .pup.cheer .ear-r { animation: flop-r 620ms ease; }
+  .pup.cheer .eye-open { opacity: 0; }
+  .pup.cheer .eye-happy { opacity: 1; }
+  .pup.cheer .tongue { opacity: 1; }
+  .pup.cheer .spark { animation: pop 620ms ease-out; }
+  .pup.oops .head { animation: shake 320ms ease; }
+  @keyframes hop {
+    0%   { transform: translateY(0) scale(1,1); }
+    18%  { transform: translateY(4px) scale(1.08,.9); }
+    45%  { transform: translateY(-24px) scale(.95,1.06); }
+    72%  { transform: translateY(0) scale(1.05,.95); }
+    100% { transform: translateY(0) scale(1,1); }
+  }
+  @keyframes flop-l { 0%,100% { transform: rotate(0); } 40% { transform: rotate(-14deg); } 70% { transform: rotate(5deg); } }
+  @keyframes flop-r { 0%,100% { transform: rotate(0); } 40% { transform: rotate(14deg); } 70% { transform: rotate(-5deg); } }
+  @keyframes pop { 0% { opacity:0; transform: scale(.4); } 35% { opacity:1; transform: scale(1.1); } 100% { opacity:0; transform: scale(1.35); } }
+  @keyframes shake { 25% { transform: translateX(-5px); } 75% { transform: translateX(5px); } }
+  @media (prefers-reduced-motion: reduce) {
+    .pup.cheer .head, .pup.cheer .ear-l, .pup.cheer .ear-r, .pup.oops .head { animation: none; }
+    .pup.cheer .spark { animation: none; opacity: 1; }
+  }
+
+  .picture { font-size: 4.5rem; line-height: 1; margin: 0.1rem 0 0.9rem; }
+
+  .word {
+    display: flex; justify-content: center; gap: 0.4rem; flex-wrap: wrap;
+    margin-bottom: 1.1rem;
+  }
+  .letter {
+    width: 2.6rem; height: 3rem; border-radius: 12px;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 1.7rem; font-weight: 700; text-transform: uppercase;
+    background: color-mix(in srgb, var(--card) 60%, var(--meadow) 18%);
+    border: 2px solid var(--line);
+  }
+  .letter.blank {
+    background: var(--field);
+    border: 2px solid var(--pup-dark);
+    color: var(--pup-dark);
+  }
+  .letter.hit { border-color: var(--hit); color: var(--hit); background: color-mix(in srgb, var(--hit) 15%, var(--field)); }
+  .letter.miss { border-color: var(--miss); color: var(--miss); animation: shake 320ms ease; }
+
+  input {
+    width: 100%; background: var(--field); border: 2px solid var(--line); border-radius: 14px;
+    color: inherit; font: inherit; font-size: 1.75rem; font-weight: 700;
+    letter-spacing: 0.1em; text-align: center; text-transform: lowercase;
+    padding: 0.7rem 1rem; outline-offset: 3px;
+  }
+  input:focus-visible { outline: 3px solid var(--pup-dark); }
+  .hint { color: var(--muted); font-size: 0.95rem; margin: 0.75rem 0 0; min-height: 1.2em; }
+
+  .stats { display: flex; justify-content: center; gap: 2.25rem; margin-top: 1.6rem; padding-top: 1.15rem; border-top: 2px dashed var(--line); }
+  .stats div { display: flex; flex-direction: column; gap: 0.2rem; }
+  .stats b { font-size: 1.4rem; font-weight: 700; }
+  .stats span { color: var(--muted); font-size: 0.8rem; }
+</style>
+</head>
+<body>
+
+<div class="scene" aria-hidden="true" id="scene"></div>
+
+<main>
+  <svg class="pup" id="pup" viewBox="0 0 180 150" role="img" aria-hidden="true">
+    <g class="spark" fill="none" stroke="var(--pup-dark)" stroke-width="4" stroke-linecap="round">
+      <path d="M20 50 L8 42"/><path d="M26 30 L18 18"/><path d="M48 18 L46 6"/>
+      <path d="M160 50 L172 42"/><path d="M154 30 L162 18"/><path d="M132 18 L134 6"/>
+    </g>
+    <g class="head">
+      <g class="ear-l"><path d="M44 58 C14 58 10 100 32 112 C44 96 48 72 60 62z" fill="var(--pup-dark)"/></g>
+      <g class="ear-r"><path d="M136 58 C166 58 170 100 148 112 C136 96 132 72 120 62z" fill="var(--pup-dark)"/></g>
+      <ellipse cx="90" cy="82" rx="52" ry="48" fill="var(--pup)"/>
+      <path d="M90 100 c20 0 28 12 28 26 c0 16 -13 26 -28 26 c-15 0 -28 -10 -28 -26 c0 -14 8 -26 28 -26z" fill="var(--pup-light)"/>
+      <g class="eye-open" fill="#2a2420"><circle cx="70" cy="76" r="7"/><circle cx="110" cy="76" r="7"/></g>
+      <g class="eye-happy" fill="none" stroke="#2a2420" stroke-width="5" stroke-linecap="round">
+        <path d="M61 78 q9 -12 18 0"/><path d="M101 78 q9 -12 18 0"/></g>
+      <ellipse cx="90" cy="108" rx="9" ry="7" fill="#2a2420"/>
+      <path d="M90 115 v5 M90 120 q-9 6 -15 0 M90 120 q9 6 15 0"
+            fill="none" stroke="#2a2420" stroke-width="3.5" stroke-linecap="round"/>
+      <path class="tongue" d="M82 123 q8 16 16 0 q-8 7 -16 0z" fill="#e8718a"/>
+      <circle cx="58" cy="100" r="6" fill="#f2a9a0" opacity=".6"/>
+      <circle cx="122" cy="100" r="6" fill="#f2a9a0" opacity=".6"/>
+    </g>
+  </svg>
+
+  <p class="picture" id="picture">🐱</p>
+  <div class="word" id="word"></div>
+
+  <input id="entry" type="text" maxlength="1" autocomplete="off" autocorrect="off"
+         spellcheck="false" aria-label="Type the missing letter">
+  <p class="hint" id="hint">What letter is missing?</p>
+
+  <div class="stats">
+    <div><b id="streak">0</b><span>streak</span></div>
+    <div><b id="best">0</b><span>best</span></div>
+    <div><b id="total">0</b><span>solved</span></div>
+  </div>
+</main>
+
+<script>
+(function () {
+  var items = [
+    // animals
+    ['cat','🐱'], ['dog','🐶'], ['pig','🐷'], ['cow','🐮'], ['hen','🐔'],
+    ['bee','🐝'], ['fox','🦊'], ['owl','🦉'], ['ant','🐜'], ['bat','🦇'],
+    ['fish','🐟'], ['frog','🐸'], ['bear','🐻'], ['lion','🦁'], ['duck','🦆'],
+    ['bird','🐦'], ['crab','🦀'], ['snail','🐌'], ['snake','🐍'], ['rabbit','🐰'],
+    ['monkey','🐵'], ['turtle','🐢'], ['sheep','🐑'], ['goat','🐐'], ['horse','🐴'],
+    ['zebra','🦓'], ['tiger','🐯'], ['panda','🐼'], ['koala','🐨'], ['camel','🐫'],
+    ['whale','🐋'], ['shark','🦈'], ['mouse','🐭'], ['chick','🐤'],
+    // foods
+    ['egg','🥚'], ['apple','🍎'], ['lemon','🍋'], ['grape','🍇'], ['cherry','🍒'],
+    ['orange','🍊'], ['carrot','🥕'], ['potato','🥔'], ['banana','🍌'], ['cake','🎂'],
+    ['pizza','🍕'], ['donut','🍩'], ['candy','🍭'], ['milk','🥛'], ['juice','🧃'],
+    ['bread','🍞'], ['cheese','🧀'], ['melon','🍉'], ['mango','🥭'], ['onion','🧅'],
+    ['bacon','🥓'], ['cookie','🍪'], ['waffle','🧇'],
+    // transportation (a few simple, common ones)
+    ['bus','🚌'], ['car','🚗'], ['train','🚂'], ['plane','✈️'], ['boat','⛵'],
+    ['bike','🚲'], ['truck','🚚'], ['ship','🚢'],
+    // professionals (easy to recognize)
+    ['doctor','🧑‍⚕️'], ['nurse','👩‍⚕️'], ['chef','👨‍🍳'], ['farmer','👨‍🌾'],
+    ['police','👮'], ['teacher','🧑‍🏫'],
+    // simple everyday things
+    ['sun','☀️'], ['moon','🌙'], ['star','⭐'], ['tree','🌳'], ['flower','🌸'],
+    ['kite','🪁'], ['ball','⚽'], ['book','📖'], ['gift','🎁'], ['drum','🥁'],
+    ['house','🏠'], ['chair','🪑'], ['door','🚪'], ['shoe','👟'], ['hat','🎩']
+  ];
+
+  var compliments = ['Great job!', 'You did it!', 'Super star!', 'Well done!', 'Awesome!', 'Nice work!', 'Yes! Perfect!', 'Brilliant!'];
+
+  var picture = document.getElementById('picture');
+  var wordEl = document.getElementById('word');
+  var entry = document.getElementById('entry');
+  var hint = document.getElementById('hint');
+  var pup = document.getElementById('pup');
+  var streakEl = document.getElementById('streak');
+  var bestEl = document.getElementById('best');
+  var totalEl = document.getElementById('total');
+
+  var state = { word: '', blankIndex: 0, streak: 0, best: 0, total: 0, prevWord: '' };
+  var timer = null;
+
+  function load() {
+    try {
+      var raw = localStorage.getItem('spelling-game');
+      if (raw) {
+        var s = JSON.parse(raw);
+        state.best = s.best || 0;
+        state.total = s.total || 0;
+      }
+    } catch (e) {}
+  }
+  function save() {
+    try {
+      localStorage.setItem('spelling-game', JSON.stringify({ best: state.best, total: state.total }));
+    } catch (e) {}
+  }
+
+  function makeBubbles() {
+    var scene = document.getElementById('scene');
+    var colors = ['var(--b1)','var(--b2)','var(--b3)','var(--b4)','var(--b5)'];
+    var html = '';
+    for (var i = 0; i < 14; i++) {
+      var size = 18 + Math.random() * 46;
+      var left = Math.random() * 100;
+      var dur = 14 + Math.random() * 16;
+      var delay = -Math.random() * dur;
+      var color = colors[i % colors.length];
+      html += '<span class="bubble" style="width:' + size + 'px;height:' + size + 'px;' +
+        'left:' + left + '%; bottom:-10%; background:' + color + ';' +
+        'animation-duration:' + dur + 's; animation-delay:' + delay + 's;"></span>';
+    }
+    html += '<svg class="meadow" viewBox="0 0 1440 320" preserveAspectRatio="none">' +
+      '<path fill="var(--meadow)" d="M0 220 q180 -60 360 -10 q180 50 360 -10 q180 -60 360 -10 q180 50 360 10 V320 H0Z"/>' +
+      '<path fill="var(--meadow-dark)" d="M0 260 q200 -50 400 0 q200 50 380 -10 q220 -60 460 10 q120 30 200 20 V320 H0Z"/>' +
+      '</svg>';
+    scene.innerHTML = html;
+  }
+
+  function newRound() {
+    var pick;
+    do { pick = items[Math.floor(Math.random() * items.length)]; } while (pick[0] === state.prevWord && items.length > 1);
+    state.prevWord = pick[0];
+    state.word = pick[0];
+    state.blankIndex = Math.floor(Math.random() * pick[0].length);
+    picture.textContent = pick[1];
+    renderWord('');
+  }
+
+  function renderWord(typed) {
+    wordEl.innerHTML = '';
+    for (var i = 0; i < state.word.length; i++) {
+      var box = document.createElement('div');
+      box.className = 'letter';
+      if (i === state.blankIndex) {
+        box.classList.add('blank');
+        box.textContent = typed || '';
+      } else {
+        box.textContent = state.word[i];
+      }
+      wordEl.appendChild(box);
+    }
+  }
+
+  function render() {
+    streakEl.textContent = state.streak;
+    bestEl.textContent = state.best;
+    totalEl.textContent = state.total;
+  }
+
+  function react(good) {
+    clearTimeout(timer);
+    pup.classList.remove('cheer', 'oops');
+    void pup.offsetWidth;
+    pup.classList.add(good ? 'cheer' : 'oops');
+    timer = setTimeout(function () { pup.classList.remove('cheer', 'oops'); }, good ? 900 : 400);
+  }
+
+  entry.addEventListener('input', function () {
+    var val = entry.value.toLowerCase().replace(/[^a-z]/g, '');
+    entry.value = val;
+    if (!val) { renderWord(''); return; }
+
+    var correct = state.word[state.blankIndex];
+    renderWord(val);
+    var box = wordEl.children[state.blankIndex];
+
+    if (val === correct) {
+      box.classList.add('hit');
+      state.streak++;
+      state.total++;
+      if (state.streak > state.best) state.best = state.streak;
+      hint.textContent = compliments[Math.floor(Math.random() * compliments.length)];
+      react(true);
+      render();
+      save();
+      entry.value = '';
+      setTimeout(newRound, 500);
+    } else {
+      box.classList.add('miss');
+      state.streak = 0;
+      hint.textContent = 'Try again.';
+      react(false);
+      render();
+      save();
+      setTimeout(function () { entry.value = ''; renderWord(''); }, 350);
+    }
+  });
+
+  document.addEventListener('click', function (e) {
+    entry.focus();
+  });
+
+  makeBubbles();
+  load();
+  newRound();
+  render();
+  entry.focus();
+})();
+</script>
+</body>
+</html>
